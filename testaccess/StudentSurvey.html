@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+ <!-- Student Name: sbammidi -->
+<!-- This is the Student page which has all the fields related to survey. -->
+<html>
+<head>
+
+<meta charset = "utf-8">
+<title>Student Survey</title>
+
+<link rel="stylesheet" href="jquery-ui.css"/>
+<script src="js/jquery.js" type="text/javascript"></script>
+<script src="js/jquery-ui.js" type="text/javascript"></script>
+<script src="js/jquery-ui.min.js" type="text/javascript"></script>
+<script type = "text/javascript" src="CityAndState.json"></script>
+<script type = "text/javascript">
+var now = new Date();
+var hour = now.getHours();
+var time = now.getTime();
+var expireTime = time + 1000*36000;
+now.setTime(expireTime);
+var name;
+var zipValid = false;
+
+if(hour < 12)
+{
+	document.write("<h1>Good Morning ");
+}
+else
+{
+	hour = hour - 12;
+
+	if(hour < 6)
+	{
+		document.write("<h1>Good Afternoon ");
+	}
+	else
+	{
+		document.write("<h1>Good Evening ");
+	}
+} 
+
+if(document.cookie)
+{
+	var myCookie = unescape(document.cookie);
+	var cookieTokens = myCookie.split("=");
+	name = cookieTokens[1];
+}
+else
+{
+	name = window.prompt("Please enter your name:","Sameera");
+	document.cookie = "name=" + escape(name)+"expires="+now.toGMTString();
+
+}
+document.writeln(name + ", welcome to Assignment #3!</h1>");
+document.writeln( "<a href = 'javascript:wrongPerson()'> Click here if you are not " + name + "</a>" );
+
+function wrongPerson()
+{
+	document.cookie= "name=null; expires=Thu, 21-Jan-95 00:00:01 GMT";
+
+	location.reload();
+}
+
+function averageAndMaximum()
+{
+	var data = document.getElementById("dataId").value;
+	var dataTokens = data.split(",");
+	var average = 0;
+	var maximum = 0;
+
+	if(dataTokens.length < 10)
+	{
+		window.alert("This field needs to contain at least 10 comma-separated list of values");
+	}
+
+	for(var i = 0; i < dataTokens.length; i++)
+	{
+		if(parseInt(dataTokens[i])<1 || parseInt(dataTokens[i])>100 || isNaN(parseInt(dataTokens[i]))|| parseInt(dataTokens[i])=="")
+		{
+			window.alert("Enter numbers between 1 and 100 (inclusive)");
+		}
+		else
+		{
+			average += parseInt(dataTokens[i]);
+			maximum = Math.max(maximum, parseInt(dataTokens[i]));
+		}
+	}
+	document.getElementById("averageId").innerHTML = average;
+	document.getElementById("maximumId").innerHTML = maximum;
+}
+
+function validateFormEventHandling()
+{
+	allTrue = true;
+	if(!document.getElementById("firstNameId").value.match(/^[A-Z]+$/i))
+	{
+		alert("Error: Enter a Valid First name.");
+		document.getElementById("firstNameId").value="";
+		allTrue = false;
+	}
+
+	if(!document.getElementById("lastNameId").value.match(/^[A-Z]+$/i))
+	{
+		alert("Error: Enter a Valid Last name.");
+		document.getElementById("lastNameId").value="";
+		allTrue = false;
+	}
+
+	if(!document.getElementById("addressLine1Id").value.match(/^[a-z0-9]+$/i))
+	{
+		alert("Error: Enter a Valid Address.");
+		document.getElementById("addressLine1Id").value="";
+		allTrue = false;
+	}
+
+	var addressLine2Optional = document.getElementById("addressLine2Id").value;
+	if(!(addressLine2Optional.match(/^[a-z0-9]+$/i) || addressLine2Optional == ""))
+	{
+		alert("Error: Enter a Valid Address.");
+		document.getElementById("addressLine2Id").value="";
+		allTrue = false;
+	}
+	
+	if(!document.getElementById("emailId").value.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,63}$/i))
+	{
+		alert("Error: Enter a valid Email ID."); 
+		document.getElementById("emailId").value=""; 
+		allTrue = false;
+	}
+	
+	 
+	var checkBoxArray = document.getElementsByName('checkId');
+	var count = 0;
+
+	for(var i = 0; i < checkBoxArray.length; i++)
+	{
+		if (checkBoxArray[i].checked) 
+		{
+			count++;
+		}
+	}
+	if(count < 2)
+	{
+		alert("Select at least two checkboxes on why you became interested in the University");
+		allTrue = false;
+	}
+      
+	if(!(document.getElementById("friendsId").checked || document.getElementById("televisionId").checked || document.getElementById("internetId").checked || document.getElementById("otherId").checked))
+	{
+		alert("Error: Select at least one radio button.");
+		allTrue = false;
+	}
+	else if(allTrue)
+	{
+		alert("Thank you for the feedback.");
+	}
+}
+
+// get city and state that were generated using the zip code
+// and display them on the page
+function showCityState()
+{
+	var asyncRequest = new XMLHttpRequest();
+
+	// display message while request is being processed
+	document.getElementById("validateZipId").innerHTML = "Checking zip...";
+
+	var url = "CityAndState.json";
+	var zipCode = document.getElementById("zipId").value;
+
+	asyncRequest.open("GET", url, true);
+	
+	asyncRequest.onreadystatechange = function() 
+	{
+	//document.getElementById("validateZipId").innerHTML = "got to 167";
+	
+		// if request has completed successfully, process the response
+		if (asyncRequest.status == 200 && asyncRequest.readyState == XMLHttpRequest.DONE)
+		{
+			//document.getElementById("validateZipId").innerHTML = "Got to 172";
+			// convert the JSON string to an object
+			//document.getElementById("validateZipId").innerHTML ="Got to 173";
+			var data = JSON.parse(asyncRequest.responseText);
+			//var data = asyncRequest.responseText.parseJSON();
+			//document.getElementById("validateZipId").innerHTML ="Got to 176";
+			for(var i = 0; i < data.zipcodes.length; i++)
+			{
+				// update zip code validity tracker and show city and state
+				if (zipCode  == data.zipcodes[i].zip)
+				{
+					zipValid = true; // update validity tracker
+					// display city and state
+					document.getElementById("validateZipId").innerHTML = "";
+
+					document.getElementById("cityId").innerHTML = data.zipcodes[i].city;
+					document.getElementById("stateId").innerHTML = data.zipcodes[i].state;
+				} // end if
+			}
+			
+			if(zipValid == false)
+			{
+				document.getElementById("validateZipId").innerHTML = "An invalid zip"; // display the error
+
+				// clear city and state values if they exist
+				document.getElementById("cityId").innerHTML = "";
+				document.getElementById("stateId").innerHTML = "";
+			}
+					
+		} // end if
+		else if (asyncRequest.status == 500)
+		{
+			document.getElementById("validateZip").innerHTML = "Zip validation service not avaliable";
+		} // end else if
+	};
+	asyncRequest.send();
+}
+
+//Tooltip
+$(function() 
+{
+    $("#anchorId").tooltip();
+});
+
+</script>
+
+<style type = "text/css">
+
+h1
+{
+	color: blue;
+	text-shadow: -4px 4px 6px dimgrey; <!--Add shadow-->
+	font-size: 200%; <!--Increasing the font size-->
+}
+
+body
+{
+
+background-color: #ffeebb;
+
+<!--background-image: url(mason-logo.png);
+background-position: bottom right;
+background-repeat: no-repeat;
+background-attachment: fixed;-->
+}
+
+.bgimg { position: absolute;
+top: 0px;
+left: 0px;
+z-index: 1; }
+
+.centerClass
+{
+text-align: center;
+}
+.fixed_anchor
+{
+position: fixed;
+bottom: 0px;
+right: 0px;
+}
+</style>
+
+</head>
+
+<body>
+
+<p><a id="anchorId" title="Please visit http://www.gmu.edu for more information" href = "https://www2.gmu.edu/"   class="fixed_anchor" ><img src = "mason-logo.png" class = "fixed_anchor" alt = "George Mason Logo" width="260" height="180"/></a></p>
+</br>
+</br>
+</br>
+
+<h1 class = "centerClass">CS Department survey form</h1>
+	<p>Please fill in all the details and click on Submit</p>
+	<form autocomplete id="formId" method="post" action="" >
+		<table>
+			<tbody>
+				<tr>
+					<label>
+						<td>First Name: </td>
+						<td><input id="firstNameId" type="text" name="FirstName" size="40" maxlength="40" required autofocus = "on"/></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>Last Name: </td>
+						<td><input id="lastNameId" type="text" name="LastName" size="40" maxlength="40" required /></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>Address Line1: </td>
+						<td><input id="addressLine1Id" type="text" name="StreetAddressLine1" size="40" maxlength="40" required /></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>Address Line2: </td>
+						<td><input id="addressLine2Id" type="text" name="StreetAddressLine2" size="40" maxlength="40" /></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>City: </td>
+						<td><div id="cityId"><div/></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>State: </td>
+						<td><div id="stateId"><div/></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>Zip: </td>
+						<td><input id="zipId" name="Zip" size="40" maxlength="40" onblur="showCityState()" required /><span id = "validateZipId"> </span></td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>Telephone: </td>
+						<td><input type="text" name="Telephone" placeholder = "xxx-xxx-xxxx" size="40" maxlength="40" /> (999-999-9999)</td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>E-mail: </td>
+						<td><input id="emailId" type="email" placeholder = "name@domain.com" name="Email" size="40" maxlength="40" /> (name@domain.com)</td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>URL: </td>
+						<td><input type="url" placeholder = "http://www.domainname.com" name="URL" size="40" maxlength="40" /> (http://www.domainname.com)</td>
+					</label>
+				</tr>
+				<tr>
+					<label>
+						<td>Date of survey: </td>
+						<td><input type="date" name="Dateofsurvey" size="40" maxlength="40" required /> (yyyy-mm-dd)</td>
+					</label>
+				</tr>
+				<tr>
+					<td>Data: </td>
+					<td><input id="dataId" type="text" name="Data" size="60" required onmouseout="averageAndMaximum()"/>
+						(Please enter at least 10 comma separated numbers ranging from 1 through 100)
+					</td>
+				</tr>
+				<tr>
+					<td>Average: </td>
+					<td><output id="averageId" type="text" name="Average"/></td>
+				</tr>
+				<tr>
+					<td>Maximum: </td>
+					<td><output id="maximumId" type="text" name="Maximum"/></td>
+				</tr>
+
+			</tbody>
+		</table>
+		</br></br>
+		<p><i>What do you like most about the campus?</i></p>		
+		<input type="checkbox" name="checkId"/>Students
+		<input type="checkbox" name="checkId"/>Location
+		<input type="checkbox" name="checkId"/>Campus
+		<input type="checkbox" name="checkId"/>Atmosphere
+		<input type="checkbox" name="checkId"/>Dorm Rooms
+		<input type="checkbox" name="checkId"/>Sports
+		</br></br>
+		<p><i>How did you become interested in the university?</i></p>
+		<input type="radio" id="friendsId" name="interest" value="Friends" />Friends
+		<input type="radio" id="televisionId" name="interest" value="Television" />Television
+		<input type="radio" id="internetId" name="interest" value="Internet" />Internet
+		<input type="radio" id="otherId" name="interest" value="Other" />Other
+		</br></br>
+		
+		<p><i>What is the likelihood of you recommending this school to other prospective students?</i></p>
+		<select name="likelihood" required>
+		   <option value="0">Very Likely</option>
+		   <option value="1">Likely</option>
+		   <option value="2">Unlikely</option>		   
+		</select>
+		<br><br>
+		
+		<p><label>High-School graduation month: <input type="text" name="HSGM" placeholder = "Select a month" list = "months" />
+			<datalist id = "months">
+				<option value = "January">
+				<option value = "February">
+				<option value = "March">
+				<option value = "April">
+				<option value = "May">
+				<option value = "June">
+				<option value = "July">
+				<option value = "August">
+				<option value = "September">
+				<option value = "October">
+				<option value = "November">
+				<option value = "December">
+			</datalist>
+		</label> <label>Year: <input type="text" name="GraduationYear" /></label></p></br>
+		
+		<p><em>Please rate one of your favourite movies from the below dropdown box:</em></p></br>
+		<table>
+			<tr>
+				<td>UserID: </td>
+				<td><input type="text" /></td> 
+			</tr>
+			<tr>
+				<td>MovieID: </td>
+				<td>
+					<input type="text" placeholder = "Select a movie" list = "movies" />
+					<datalist id = "movies">
+					<option value = "234: Get Out">
+					<option value = "235: Dunkirk">
+					<option value = "236: Coco">
+					<option value = "237: The Florida Project">
+					<option value = "238: Phantom Thread">
+					</datalist>
+				</td>
+			</tr>
+			<tr>
+				<td>Rating: </td>
+				<td>
+					<input type="text" list = "ratings" />
+					<datalist id = "ratings">
+						<option value = 1>
+						<option value = 2>
+						<option value = 3>
+						<option value = 4>
+						<option value = 5>
+					</datalist>
+				</td>
+			</tr>
+			<tr>
+				<td>TimeStamp: </td>
+				<td><input type="datetime" /> (yyyy-mm-ddThh:mm such as 2018-02-13T11:24)</td>
+			</tr>
+		</table>
+		</br>
+		Additional Comments:<br><textarea rows="10" cols="70"></textarea>		
+		</br></br>
+		<table width = 10%>
+			<tr>
+				<td><input type="reset" name="resetbutton" value="Reset"/></td>
+				<td><input type="submit" name="submitbutton" value="Submit" onclick="validateFormEventHandling()" /></td>
+			</tr>
+		</table>
+	</form>
+</body>
+</html>
